@@ -1,12 +1,8 @@
-project(crop)
+project(cropping)
 
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-set(CMAKE_CXX_FLAGS "-std=c++11")
-
 find_package(OpenCV REQUIRED)
 
-include_directories(${PROJECT_BINARY_DIR})
-
-add_executable (crop main.cpp imagemanager)
-target_link_libraries (crop ${OpenCV_LIBS})
+add_executable (${PROJECT_NAME} main imagemanager)
+target_link_libraries (${PROJECT_NAME} ${OpenCV_LIBS})

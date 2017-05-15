@@ -25,6 +25,7 @@ Mat img;
 Mat prev_img;
 // Cropped image
 Mat crop;
+Mat gui_frame;
 
 // Starting and ending points of the user's selection
 Point corner1, corner2;
@@ -166,6 +167,8 @@ void processDir(string dir_name) {
 		
 		
         imshow(window_name, img);
+
+		gui_frame = img.clone();
         
         keyboard = waitKey(0);
 		
@@ -241,9 +244,15 @@ static void mouse_callback(int event, int x, int y, int, void *)
            0 <= box.height &&
            box.y + box.height <= img.rows)
         {
-           Mat local_img = img.clone();
-           rectangle(local_img, corner1, corner2, Scalar(0, 0, 255));
-           imshow(window_name, local_img);
+			Mat local_img;
+            if (gui_frame.data) {
+				local_img = gui_frame.clone();
+			}
+			else {
+                local_img = img.clone();
+			}
+            rectangle(local_img, corner1, corner2, Scalar(0, 0, 255));
+            imshow(window_name, local_img);
         }     
     }
 
@@ -302,7 +311,13 @@ static void mouse_callback(int event, int x, int y, int, void *)
 		drag.x = x;
 		drag.y = y;
 
-	    Mat local_img = img.clone();
+		Mat local_img;
+		if (gui_frame.data) {
+			local_img = gui_frame.clone();
+		}
+		else {
+			local_img = img.clone();
+		}
 	    rectangle(local_img, corner1, corner2, Scalar(0, 0, 255));
 	    imshow(window_name, local_img);
 	    waitKey(30);
@@ -411,6 +426,8 @@ void processVideo(string video_name, int ms) {
 	    }
 	    
 		imshow(window_name, img);
+
+		gui_frame = img.clone();
 		    
 		char key = char(waitKey(interval));
 		if (key == 'q' || key == 27) {
@@ -424,11 +441,17 @@ void processVideo(string video_name, int ms) {
 		}
 		else if (key == 's') { //save
 
+			if (interval != 0) {
+				interval = 0;
+			}
+
 			bool saving = true;
 			bool saved = false;
 			bool img_stored = false;
 
 			ofstream obs_file;
+
+			gui_frame = img.clone();
 			
 			while (saving) {
 
@@ -465,12 +488,17 @@ void processVideo(string video_name, int ms) {
 					}
 
 					saved = true;
+
+					rectangle(gui_frame, box, Scalar(0, 255, 0), 2);
+					imshow(window_name, gui_frame);
+
 				}
 
 				key = char(waitKey(30));
 				if (key == 'n') {
 					saving = false;
 					obs_file.close();
+					gui_frame = img.clone();
 				}
 				else if (key == 's') {
 					saved = false;

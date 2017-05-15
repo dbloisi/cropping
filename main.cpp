@@ -132,7 +132,9 @@ int main(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 	
-void processDir(string dir_name) {		
+void processDir(string dir_name) {
+
+	cout << "Processing files in a directory" << endl;
 		
     ImageManager *im = new ImageManager(dir_name);
 		
@@ -150,22 +152,22 @@ void processDir(string dir_name) {
         box.width = min_width;
         box.height = min_height;
 
-	//read the first file of the sequence
+	    //read the first file of the sequence
         string image_name = im->next(1);
 		
         cout << "reading image: " << image_name << endl;
         img = imread(image_name);
 
 		
-	if(!img.data) {
-	    //error in opening the first image
+        if(!img.data) {
+			//error in opening the first image
             cerr << "Unable to open first image frame: " << image_name << endl;
-	    exit(EXIT_FAILURE);
-	}
+            exit(EXIT_FAILURE);
+        }
 
-	cout << "W: " << img.cols << "   H: " << img.rows << endl;
+        cout << "W: " << img.cols << "   H: " << img.rows << endl;
 		
-		
+#if 0	
         imshow(window_name, img);
 
 		gui_frame = img.clone();
@@ -203,7 +205,77 @@ void processDir(string dir_name) {
                 cerr << "Unable to save image: " << saved_crop_name  << endl;
 				exit(EXIT_FAILURE);
             }
+#endif
 
+		imshow(window_name, img);
+
+		gui_frame = img.clone();
+
+		char key = char(waitKey(0));
+		if (key == 'q' || key == 27) {
+			return;
+		}
+		else if (key == 's') { //save
+			bool saving = true;
+			bool saved = false;
+			bool img_stored = false;
+
+			ofstream obs_file;
+
+			gui_frame = img.clone();
+
+			while (saving) {
+
+				if (!saved) {
+
+					ostringstream ss1;
+					ss1 << box.tl().x;
+					ostringstream ss2;
+					ss2 << box.tl().y;
+					ostringstream ss3;
+					ss3 << box.br().x;
+					ostringstream ss4;
+					ss4 << box.br().y;
+					string box_value = ss1.str() + "_" + ss2.str() + "_" + ss3.str() + "_" + ss4.str();
+
+					int idx = image_name.find_last_of("/");
+					image_name = image_name.substr(idx + 1);
+					idx = image_name.find_last_of(".");
+
+					string saved_crop_name;
+
+					saved_crop_name.assign(image_name.substr(0, idx) + "_crop_" + box_value + ".png");
+
+
+					if (box.x == 0 && box.y == 0) {
+						crop = img.clone();
+					}
+
+					if (imwrite(saved_crop_name, crop)) {
+						cout << "image: " << saved_crop_name << " saved." << endl;
+					}
+					else {
+						cerr << "Unable to save image: " << saved_crop_name << endl;
+						exit(EXIT_FAILURE);
+					}
+
+					saved = true;
+
+					rectangle(gui_frame, box, Scalar(0, 255, 0), 2);
+					imshow(window_name, gui_frame);
+
+				}
+
+				key = char(waitKey(0));
+				if (key == 'n') {
+					saving = false;
+					obs_file.close();
+					gui_frame = img.clone();
+				}
+				else if (key == 's') {
+					saved = false;
+				}
+			}
         }
 		     
     }	
